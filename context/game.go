@@ -7,12 +7,16 @@ import (
 	"github.com/nleskiw/goplaycards/deck"
 )
 
+// The main interface to implement for a single player
+// The game context will call these methods to interact with the player
+// Example usages could be a CLI player, or a web player
 type Playeractor interface {
 	HitOrStand(ownHand []deck.Card, otherHands [][]deck.Card, dealerHand deck.Card) (hitOrStand Action)
 	Bet(wallet float64) (bid float64)
 	AddToWallet() (amount float64)
 }
 
+// Action is the action a player can take (Hit or Stand)
 type Action uint
 
 const (
@@ -20,18 +24,22 @@ const (
 	Stand
 )
 
+// Context is the main game context, it holds the deck, players, and dealer
+// Create a context instance, add players and run the game
 type Context struct {
 	deck    *deck.Deck
 	players []*player
 	dealer  *player
 }
 
+// NewGame creates a new game context
 func NewGame() *Context {
 	context := &Context{}
 	context.deck = &deck.Deck{}
 	return context
 }
 
+// AddPlayer adds a player to the game (max 3)
 func (c *Context) AddPlayer(actor Playeractor) (err error) {
 	if len(c.players) >= 3 {
 		return errors.New("too many players")
@@ -43,6 +51,7 @@ func (c *Context) AddPlayer(actor Playeractor) (err error) {
 	return
 }
 
+// PlayRound starts a new round of blackjack
 func (c *Context) PlayRound() {
 	fmt.Println("Starting new round...")
 
@@ -81,6 +90,7 @@ func (c *Context) PlayRound() {
 	c.printWinnings()
 }
 
+// getBids gets the bids from all players (and asks if they want to add to wallet)
 func (c *Context) getBids() {
 	for i, player := range c.players {
 		fmt.Println("Getting bid for player", i+1)
@@ -89,19 +99,21 @@ func (c *Context) getBids() {
 	}
 }
 
+// Initializes the dealer
 func (c *Context) addDealer() {
 	c.dealer = &player{}
 }
 
+// draws two cards for a player
 func (c *Context) drawTwo(p *player) {
 	cards, err := c.deck.Draw(2)
 	if err != nil {
 		panic(err)
 	}
 	p.addCards(cards)
-
 }
 
+// calculates and distributes winnings to all players wallets at the end of the turn
 func (c *Context) distributeWinnings() {
 	// Check who won and distribute winnings
 	for _, player := range c.players {
@@ -130,6 +142,7 @@ func (c *Context) distributeWinnings() {
 	}
 }
 
+// draws the initial cards for all players and the dealer
 func (c *Context) drawInitial() {
 	for _, player := range c.players {
 		player.clearHand()
@@ -139,6 +152,7 @@ func (c *Context) drawInitial() {
 	c.drawTwo(c.dealer)
 }
 
+// a single winner's round to hit and stand till they either bust or stand
 func (c *Context) playerTurn(playerIndex int) {
 
 	player := c.players[playerIndex]
@@ -169,6 +183,7 @@ func (c *Context) playerTurn(playerIndex int) {
 	}
 }
 
+// draws cards for dealer at end of round
 func (c *Context) dealerRound() {
 	dealerDone := false
 	for !dealerDone {
@@ -186,6 +201,7 @@ func (c *Context) dealerRound() {
 	c.dealer.printDealerHand()
 }
 
+// helper function to print the winnings of all players
 func (c *Context) printWinnings() {
 	for i, player := range c.players {
 		fmt.Println("Player ", i+1, " wallet: ", player.wallet)

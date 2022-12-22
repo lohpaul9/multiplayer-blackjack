@@ -81,6 +81,7 @@ func main() {
 
 	c := context.NewGame()
 	c.AddPlayer(new(cmdLinePlayer))
+	c.AddPlayer(new(cmdLinePlayer))
 
 	for {
 		c.PlayRound()
