@@ -1,12 +1,33 @@
 Blackjack
 =========
 
-Golang implementation of Blackjack (21)
+Golang implementation of Blackjack (21) with a generic interface to play the game
+logic using any extendable logic.
 
-This was written as a Golang exercise to get more familiar with the language.
+Installation instructions 
+------------
+get module using
+```
+go get github.com/lohpaul9/multiplayer-blackjack
+```
+
+Basic Usage
+------------
+```
+c := context.NewGame() // Create a new game context
+c.AddPlayer(new(PlayerActionImplementation)) // Add players as desired
+c.PlayRound() // Play a single round of the game
+```
+
+The game context will, at appropriate moments, call the callback functions provided by the any implementation of the ```PlayerAction``` interface. 
+
+Ideas for usages of the interface would be to link up the interface to a CLI, web app game etc. 
+
+* Example code is given in main.go, where a basic CLI implementation of the interface demonstrates the reusability of the client. 
 
 Table rules:
 ------------
+Table rules was refactored from: https://github.com/nleskiw/blackjack
 
 * Basic play only (Hit / Stand) 
 * Dealer stands on soft 17.

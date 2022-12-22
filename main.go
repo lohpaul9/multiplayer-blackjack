@@ -6,10 +6,10 @@ Modifications were made to allow the 'game context' to be played generically usi
 package main
 
 import (
-	"blackjack/context"
 	"fmt"
 	"strconv"
 
+	"github.com/lohpaul9/multiplayer-blackjack/context"
 	"github.com/nleskiw/goplaycards/deck"
 )
 
