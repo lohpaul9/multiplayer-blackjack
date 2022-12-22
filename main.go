@@ -1,8 +1,6 @@
 /*
-
 Game logic adapted from https://github.com/nleskiw/blackjack on 22/12/2022
-Modifications were made to allow the 'game context' to be played generically using provided callback functions
-
+Modifications were made to allow the 'game context' to be played generically using provided interfaces.
 */
 
 package main
@@ -15,20 +13,25 @@ import (
 	"github.com/nleskiw/goplaycards/deck"
 )
 
-type cmdLinePlayer struct {
-}
+type cmdLinePlayer struct{}
 
 func (c cmdLinePlayer) AddToWallet() (amount float64) {
 	return float64(getInteger("How much would you like to add to your wallet? "))
 }
 
-func (c cmdLinePlayer) HitOrStand(otherHands [][]deck.Card, dealerHand deck.Card) (hitOrStand context.Action) {
+func (c cmdLinePlayer) HitOrStand(ownHand []deck.Card, otherHands [][]deck.Card, dealerHand deck.Card) (hitOrStand context.Action) {
+	fmt.Printf("Dealer Hand: ")
+	fmt.Printf("XX  %s  \n", dealerHand.ToStr())
+	fmt.Printf("Your Hand: ")
+	for _, card := range ownHand {
+		fmt.Printf("%s  ", card.ToStr())
+	}
 	return getPlayerActionAction()
 }
 
 func (c cmdLinePlayer) Bet(wallet float64) (bet float64) {
 	str := fmt.Sprintf("%f", wallet)
-	return float64(getInteger("You currently have " + str + "How much would you like to bet ($5 increments)? "))
+	return float64(getInteger("You currently have " + str + ". How much would you like to bet ($5 increments)? "))
 }
 
 // getPlayerAction determines what the player will do
@@ -74,19 +77,21 @@ func getInteger(prompt string) int {
 	return integer
 }
 
-func printLicense() {
-	fmt.Println("goplaycards Copyright (C) 2017  Nicholas Leskiw")
-	fmt.Println("This program comes with ABSOLUTELY NO WARRANTY; for details please visit")
-	fmt.Println("<https://www.gnu.org/licenses/gpl-3.0.txt>")
-	fmt.Println("This is free software, and you are welcome to redistribute it")
-	fmt.Printf("under certain conditions. Please see the GPLv3 license at the URL listed above.\n\n")
-}
-
 func main() {
-	printLicense()
 
 	c := context.NewGame()
 	c.AddPlayer(new(cmdLinePlayer))
 
-	c.PlayRound()
+	for {
+		c.PlayRound()
+
+		toContinue := getString("Would you like to play again? [Y]es or [N]o? ")
+		for !(toContinue == "N" || toContinue == "Y") {
+			toContinue = getString("Would you like to play again? [Y]es or [N]o? ")
+		}
+		if toContinue == "N" {
+			break
+		}
+	}
+
 }

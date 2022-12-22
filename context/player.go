@@ -22,7 +22,8 @@ func (p *player) addToWallet() {
 
 func (p *player) addToWalletNonZero() {
 	toAdd := p.actor.AddToWallet()
-	for toAdd == 0 {
+	for toAdd <= 0 {
+		fmt.Println("Give a positive number amount to add to your wallet.")
 		toAdd = p.actor.AddToWallet()
 	}
 	p.wallet += toAdd
@@ -39,7 +40,7 @@ func (p *player) bid() {
 }
 
 func (p *player) hitOrStand(otherHands [][]deck.Card, dealerHand deck.Card) Action {
-	return p.actor.HitOrStand(otherHands, dealerHand)
+	return p.actor.HitOrStand(p.hand, otherHands, dealerHand)
 }
 
 func (p *player) addCards(cards []deck.Card) {
@@ -120,12 +121,21 @@ func (p *player) printHand() {
 	fmt.Printf(" Total: %d\n", p.handTotal())
 }
 
-func (p *player) printDealerHand(hideFirst bool) {
+func (p *player) printDealerHandHidden() {
 	hand := p.hand
 	fmt.Printf("Dealer Hand: ")
-	if hideFirst {
-		fmt.Printf("XX  %s  \n", hand[1].ToStr())
-	} else {
-		p.printHand()
+	fmt.Printf("XX  %s  \n", hand[1].ToStr())
+}
+
+func (p *player) printDealerHand() {
+	hand := p.hand
+	fmt.Printf("Dealer Hand: ")
+	for _, card := range hand {
+		fmt.Printf("%s  ", card.ToStr())
 	}
+	fmt.Printf(" Total: %d\n", p.handTotal())
+}
+
+func (p *player) clearHand() {
+	p.hand = nil
 }

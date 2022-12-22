@@ -1,15 +1,14 @@
 package context
 
-//to do - change winnings to floats
-
 import (
 	"errors"
+	"fmt"
 
 	"github.com/nleskiw/goplaycards/deck"
 )
 
 type Playeractor interface {
-	HitOrStand(otherHands [][]deck.Card, dealerHand deck.Card) (hitOrStand Action)
+	HitOrStand(ownHand []deck.Card, otherHands [][]deck.Card, dealerHand deck.Card) (hitOrStand Action)
 	Bet(wallet float64) (bid float64)
 	AddToWallet() (amount float64)
 }
@@ -38,12 +37,14 @@ func (c *Context) AddPlayer(actor Playeractor) (err error) {
 		return errors.New("too many players")
 	}
 	player := &player{actor: actor}
+	fmt.Println("New player added!")
 	player.addToWalletNonZero()
 	c.players = append(c.players, player)
 	return
 }
 
 func (c *Context) PlayRound() {
+	fmt.Println("Starting new round...")
 
 	if len(c.players) == 0 {
 		return
@@ -52,34 +53,40 @@ func (c *Context) PlayRound() {
 	c.deck.Initialize()
 	c.deck.Shuffle()
 
-	for _, player := range c.players {
-		player.addToWallet()
-		player.bid()
-	}
-
+	c.getBids()
 	c.drawInitial()
 
 	if c.dealer.isBlackjack() {
+		fmt.Println("Dealer has blackjack!")
 		for _, player := range c.players {
 			if player.isBlackjack() {
 				player.wallet += player.bet
 			}
 		}
-		return
-	}
-
-	// Dealer does not have blackjack so everyone plays
-	for i, player := range c.players {
-		if !player.isBlackjack() {
-			c.playerRound(i)
+	} else {
+		// Dealer does not have blackjack so everyone plays
+		for i, player := range c.players {
+			if !player.isBlackjack() {
+				c.playerTurn(i)
+			} else {
+				fmt.Println("Player", i+1, "has blackjack!")
+			}
 		}
+
+		// Dealer plays
+		c.dealerRound()
+
+		c.distributeWinnings()
 	}
+	c.printWinnings()
+}
 
-	// Dealer plays
-	c.dealerRound()
-	c.dealer.printHand()
-
-	c.distributeWinnings()
+func (c *Context) getBids() {
+	for i, player := range c.players {
+		fmt.Println("Getting bid for player", i+1)
+		player.addToWallet()
+		player.bid()
+	}
 }
 
 func (c *Context) addDealer() {
@@ -92,6 +99,7 @@ func (c *Context) drawTwo(p *player) {
 		panic(err)
 	}
 	p.addCards(cards)
+
 }
 
 func (c *Context) distributeWinnings() {
@@ -124,12 +132,15 @@ func (c *Context) distributeWinnings() {
 
 func (c *Context) drawInitial() {
 	for _, player := range c.players {
+		player.clearHand()
 		c.drawTwo(player)
+
 	}
 	c.drawTwo(c.dealer)
 }
 
-func (c *Context) playerRound(playerIndex int) {
+func (c *Context) playerTurn(playerIndex int) {
+
 	player := c.players[playerIndex]
 	otherPlayers := append(c.players[0:playerIndex], c.players[playerIndex+1:]...)
 	otherHands := make([][]deck.Card, len(otherPlayers))
@@ -138,16 +149,18 @@ func (c *Context) playerRound(playerIndex int) {
 	}
 	playerDone := false
 	for !playerDone {
-		action := player.hitOrStand(otherHands, c.dealer.hand[0])
+		fmt.Println("PLAYER TURN:", playerIndex+1)
+		action := player.hitOrStand(otherHands, c.dealer.hand[1])
 		switch action {
 		case Hit:
-			player.printHand()
 			cards, err := c.deck.Draw(1)
 			if err != nil {
 				panic(err)
 			}
 			player.addCards(cards)
 			if player.isBust() {
+				fmt.Println("Player ", playerIndex+1, " busts!")
+				player.printHand()
 				playerDone = true
 			}
 		case Stand:
@@ -169,5 +182,12 @@ func (c *Context) dealerRound() {
 			c.dealer.addCards(cards)
 		}
 	}
-	c.dealer.printHand()
+	fmt.Println("Dealer drawing:")
+	c.dealer.printDealerHand()
+}
+
+func (c *Context) printWinnings() {
+	for i, player := range c.players {
+		fmt.Println("Player ", i+1, " wallet: ", player.wallet)
+	}
 }

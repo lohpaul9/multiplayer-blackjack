@@ -1,4 +1,4 @@
-module blackjack
+module github.com/lohpaul9/multiplayer-blackjack
 
 go 1.19
 
