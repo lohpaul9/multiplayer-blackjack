@@ -1,14 +1,13 @@
 package context
 
-// Stretch features: Implement allowing player to see
-// other players hands.
-
 import (
 	"fmt"
 
 	"github.com/nleskiw/goplaycards/deck"
 )
 
+// This represents a single player, including their hand, wallet, and bet
+// as well as the Playeractor interface that will be used to interact with the player
 type player struct {
 	hand   []deck.Card
 	bet    float64
@@ -16,10 +15,14 @@ type player struct {
 	actor  Playeractor
 }
 
+// Calls the Playeractor interface to ask player to add to wallet
 func (p *player) addToWallet() {
 	p.wallet += p.actor.AddToWallet()
 }
 
+// Calls the Playeractor interface to ask player to add to wallet, but
+// value added must be non-zero. If the value added is zero, the function will
+// just get called again.
 func (p *player) addToWalletNonZero() {
 	toAdd := p.actor.AddToWallet()
 	for toAdd <= 0 {
@@ -29,6 +32,7 @@ func (p *player) addToWalletNonZero() {
 	p.wallet += toAdd
 }
 
+// Calls the Playeraction interface to ask player to bid
 func (p *player) bid() {
 	bid := p.actor.Bet(p.wallet)
 	for bid > p.wallet {
@@ -39,10 +43,12 @@ func (p *player) bid() {
 	p.wallet -= bid
 }
 
+// Calls the playeraction interface to ask the player to make a move
 func (p *player) hitOrStand(otherHands [][]deck.Card, dealerHand deck.Card) Action {
 	return p.actor.HitOrStand(p.hand, otherHands, dealerHand)
 }
 
+// addCards adds a slice of cards to a player's hand
 func (p *player) addCards(cards []deck.Card) {
 	p.hand = append(p.hand, cards...)
 }
@@ -112,6 +118,7 @@ func (p *player) isBlackjack() bool {
 	return false
 }
 
+// helper function to print a player's hand
 func (p *player) printHand() {
 	hand := p.hand
 	fmt.Printf("Player Hand: ")
@@ -121,12 +128,15 @@ func (p *player) printHand() {
 	fmt.Printf(" Total: %d\n", p.handTotal())
 }
 
+// helper function to print a player's hand with a hidden card
+// as if it was a dealer
 func (p *player) printDealerHandHidden() {
 	hand := p.hand
 	fmt.Printf("Dealer Hand: ")
 	fmt.Printf("XX  %s  \n", hand[1].ToStr())
 }
 
+// helper function to print a dealer's hand when dealer reveals
 func (p *player) printDealerHand() {
 	hand := p.hand
 	fmt.Printf("Dealer Hand: ")
@@ -136,6 +146,7 @@ func (p *player) printDealerHand() {
 	fmt.Printf(" Total: %d\n", p.handTotal())
 }
 
+// helper function to clear a player's hand
 func (p *player) clearHand() {
 	p.hand = nil
 }

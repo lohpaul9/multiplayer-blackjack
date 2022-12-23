@@ -11,6 +11,12 @@ get module using
 go get github.com/lohpaul9/multiplayer-blackjack
 ```
 
+The basic Command-line interface game can be played by running the following command in the root directory. 
+```
+go run main.go
+``` 
+
+
 Basic Usage
 ------------
 ```

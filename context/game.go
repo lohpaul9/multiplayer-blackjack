@@ -73,10 +73,12 @@ func (c *Context) PlayRound() {
 			}
 		}
 	} else {
+
 		// Dealer does not have blackjack so everyone plays
 		for i, player := range c.players {
 			if !player.isBlackjack() {
 				c.playerTurn(i)
+
 			} else {
 				fmt.Println("Player", i+1, "has blackjack!")
 			}
@@ -154,27 +156,31 @@ func (c *Context) drawInitial() {
 
 // a single winner's round to hit and stand till they either bust or stand
 func (c *Context) playerTurn(playerIndex int) {
+	playerAtIndx := c.players[playerIndex]
 
-	player := c.players[playerIndex]
-	otherPlayers := append(c.players[0:playerIndex], c.players[playerIndex+1:]...)
+	playerCopy := make([]*player, len(c.players))
+	copy(playerCopy, c.players)
+
+	otherPlayers := append(playerCopy[0:playerIndex], playerCopy[playerIndex+1:]...)
 	otherHands := make([][]deck.Card, len(otherPlayers))
 	for i, otherPlayer := range otherPlayers {
 		otherHands[i] = otherPlayer.hand
 	}
 	playerDone := false
+
 	for !playerDone {
 		fmt.Println("PLAYER TURN:", playerIndex+1)
-		action := player.hitOrStand(otherHands, c.dealer.hand[1])
+		action := playerAtIndx.hitOrStand(nil, c.dealer.hand[1])
 		switch action {
 		case Hit:
 			cards, err := c.deck.Draw(1)
 			if err != nil {
 				panic(err)
 			}
-			player.addCards(cards)
-			if player.isBust() {
+			playerAtIndx.addCards(cards)
+			if playerAtIndx.isBust() {
 				fmt.Println("Player ", playerIndex+1, " busts!")
-				player.printHand()
+				playerAtIndx.printHand()
 				playerDone = true
 			}
 		case Stand:
@@ -204,6 +210,15 @@ func (c *Context) dealerRound() {
 // helper function to print the winnings of all players
 func (c *Context) printWinnings() {
 	for i, player := range c.players {
+		fmt.Println("Player ", i+1, " wallet: ", player.wallet)
+	}
+}
+
+// helper function to print the winnings of all players
+func (c *Context) printPlayers() {
+	fmt.Println("ALL PLAYERS")
+	for i, player := range c.players {
+		player.printHand()
 		fmt.Println("Player ", i+1, " wallet: ", player.wallet)
 	}
 }

@@ -77,6 +77,7 @@ func getInteger(prompt string) int {
 	return integer
 }
 
+// Run this to try out a CLI implementation of the game logic
 func main() {
 
 	c := context.NewGame()
